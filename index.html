@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edytor opisów produktów Purles</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    
+    h1, h2, h3 {
+      margin-bottom: 15px;
+    }
+    
+    .section {
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    
+    .row {
+      margin-bottom: 20px;
+      padding: 15px;
+      border: 1px solid #eee;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+      position: relative;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: Arial, sans-serif;
+    }
+    
+    textarea {
+      resize: vertical;
+      font-family: monospace;
+      white-space: pre-wrap;
+      min-height: 100px;
+      overflow-y: hidden; /* Ukryj domyślny scrollbar */
+    }
+    
+    /* Usuń przyciski akcji na dole, bo są już na górze */
+    .actions {
+      display: none;
+    }
+    
+    button {
+      padding: 8px 15px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    button:hover {
+      background-color: #45a049;
+    }
+    
+    button.delete {
+      background-color: #f44336;
+    }
+    
+    button.delete:hover {
+      background-color: #d32f2f;
+    }
+    
+    button.preview {
+      background-color: #2196F3;
+    }
+    
+    button.preview:hover {
+      background-color: #0b7dda;
+    }
+    
+    button.copy {
+      background-color: #ff9800;
+    }
+    
+    button.copy:hover {
+      background-color: #e68a00;
+    }
+    
+    .toolbar {
+      position: sticky;
+      top: 0;
+      background-color: #333;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      z-index: 100;
+    }
+    
+    .toolbar button {
+      width: 40px;
+      height: 40px;
+      font-size: 16px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #555;
+    }
+    
+    .toolbar button.action-btn {
+      width: auto;
+      padding: 0 15px;
+      white-space: nowrap;
+    }
+    
+    .toolbar button:hover {
+      background-color: #777;
+    }
+    
+    .toolbar .divider {
+      width: 1px;
+      background-color: #777;
+      margin: 0 5px;
+    }
+    
+    .img-preview {
+      max-width: 150px;
+      max-height: 150px;
+      margin-top: 10px;
+      border: 1px solid #ddd;
+      display: none;
+    }
+    
+    .row-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .link-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      z-index: 1000;
+      display: none;
+    }
+    
+    .link-popup input {
+      margin-bottom: 10px;
+    }
+    
+    .link-popup .buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0,0,0,0.5);
+      z-index: 999;
+      display: none;
+    }
+    
+    /* Specjalne style dla przycisków "dodaj sekcję" wewnątrz wiersza */
+    .add-inline {
+      background-color: #4CAF50;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Pasek narzędzi -->
+  <div class="toolbar">
+    <button type="button" onclick="formatText('bold')" title="Pogrubienie">B</button>
+    <button type="button" onclick="formatText('italic')" title="Kursywa">I</button>
+    <button type="button" onclick="formatText('underline')" title="Podkreślenie">U</button>
+    <div class="divider"></div>
+    <button type="button" onclick="formatText('link')" title="Link">🔗</button>
+    <button type="button" onclick="formatText('ul')" title="Lista punktowana">•</button>
+    <button type="button" onclick="formatText('ol')" title="Lista numerowana">1.</button>
+    <button type="button" onclick="formatText('strong')" title="Wyróżnienie">S</button>
+    <button type="button" onclick="formatText('em')" title="Emfaza">E</button>
+    <div class="divider"></div>
+    <div style="flex-grow: 1;"></div>
+    <button type="button" id="generate-preview" class="preview action-btn" title="Podgląd w nowym oknie">👁️ Podgląd</button>
+    <button type="button" id="copy-html" class="copy action-btn" title="Kopiuj kod HTML">📋 Kopiuj HTML</button>
+  </div>
+  
+  <!-- Popup do wstawiania linków -->
+  <div class="overlay" id="overlay"></div>
+  <div class="link-popup" id="linkPopup">
+    <h3>Wstaw link</h3>
+    <label for="linkUrl">URL:</label>
+    <input type="text" id="linkUrl" placeholder="https://example.com">
+    <label for="linkText">Tekst:</label>
+    <input type="text" id="linkText" placeholder="Tekst linku">
+    <div class="buttons">
+      <button type="button" onclick="closePopup()">Anuluj</button>
+      <button type="button" onclick="insertLink()">Wstaw</button>
+    </div>
+  </div>
+  
+  <div class="container">
+    <h1>Edytor opisów produktów Purles</h1>
+    
+    <!-- Sekcja 1: Opis główny -->
+    <div class="section" id="description-section">
+      <h2>1. Opis główny</h2>
+      
+      <div id="description-rows">
+        <!-- Wiersze opisu będą dodawane dynamicznie -->
+      </div>
+      
+      <button type="button" id="add-description-row">Dodaj nową sekcję opisu</button>
+      
+      <div class="form-group" style="margin-top: 20px;">
+        <label>Nagłówek rezultatów:</label>
+        <input type="text" id="results-headline" value="Rezultaty:">
+      </div>
+      
+      <div class="form-group">
+        <label>Treść rezultatów (HTML):</label>
+        <textarea id="results-content" class="html-content"><ul>
+<li><strong>100%</strong>&nbsp;osób badanych potwierdziło, że po zastosowaniu produktu skóra jest w sposób widoczny nawilżona.*</li>
+<li><strong>100%</strong>&nbsp;osób badanych zauważyło, że po zastosowaniu produktu nie ma odczucia przesuszenia skóry, ponieważ&nbsp; bariera ochronna jest odbudowana.*</li>
+</ul>
+<small>* Badanie wykonano na grupie 20 osób.</small></textarea>
+      </div>
+    </div>
+    
+    <!-- Sekcja 2: Skład -->
+    <div class="section" id="composition-section">
+      <h2>2. Skład</h2>
+      
+      <div class="form-group">
+        <label>Nagłówek składników:</label>
+        <input type="text" id="composition-headline" value="Składniki aktywne:">
+      </div>
+      
+      <div id="ingredients-container">
+        <!-- Składniki będą dodawane dynamicznie -->
+      </div>
+      
+      <button type="button" id="add-ingredient">Dodaj składnik aktywny</button>
+      
+      <div class="form-group" style="margin-top: 20px;">
+        <label>Pełen skład INCI (HTML):</label>
+        <textarea id="inci-content" class="html-content"><strong>Pełen skład (INCI):</strong> Aqua (Water), Paraffinum Liquidum (Mineral Oil), Glycerin, Cetearyl Isononanoate, Cetyl Alcohol, Tapioca Starch, Glyceryl Stearate, PEG-100 Stearate, Pentylene Glycol, Alpha-Glucan Oligosaccharide, Olea Europaea (Olive) Fruit Oil, Capryloyl Glycine, Argania Spinosa Kernel Oil, Parfum (Fragrance), Simmondsia Chinensis (Jojoba) Seed Oil, Propylene Glycol, Carbomer, Xanthan Gum, 1,2-Hexanediol, Caprylyl Glycol, Sodium Hydroxide, Tocopheryl Acetate, Hexamethylindanopyran, Linalyl Acetate, Calendula Officinalis Flower Extract</textarea>
+      </div>
+    </div>
+    
+    <!-- Sekcja 3: Cechy produktu -->
+    <div class="section" id="features-section">
+      <h2>3. Cechy produktu</h2>
+      
+      <div class="form-group">
+        <label>Nagłówek sekcji:</label>
+        <input type="text" id="features-headline" value="Cechy produktu:">
+      </div>
+      
+      <div id="features-container">
+        <!-- Cechy będą dodawane dynamicznie -->
+      </div>
+      
+      <button type="button" id="add-feature">Dodaj cechę produktu</button>
+    </div>
+    
+    <!-- Akcje -->
+    <div class="actions">
+      <button type="button" id="generate-preview" class="preview">Podgląd w nowym oknie</button>
+      <button type="button" id="copy-html" class="copy">Kopiuj kod HTML</button>
+    </div>
+  </div>
+
+  <script>
+    // Dane początkowe
+    const initialData = {
+      description: {
+        rows: [
+          {
+            imageUrl: "https://shop49275-1.iai-shop.com/data/include/cms/wdrozenie/opisy/image_58.webp?v=1744110330378",
+            headline: "Krem Ochrona Mikrobiomu...",
+            content: "…ma działanie ochronne i wielokierunkowe. Specjalny <strong>kompleks prebiotyczny wzmacnia naturalny mikrobiom skóry</strong> poprzez stymulację wzrostu pożytecznych bakterii. Oleje zawarte w formule bogate są w NNKT, witaminy i antyoksydanty. Odpowiadają za <strong>odbudowę skórnej bariery ochronnej,</strong> hamując jednocześnie nadmierną utratę wody i przyczyniając się tym samym do <strong>zwiększenia</strong> poziomu <strong>nawilżenia.</strong> Ekstrakt z nagietka potęguje <strong>działanie łagodzące.</strong> Krem <strong>chroni skórę</strong> przed negatywnymi czynnikami zewnętrznymi, <strong>zmniejsza łuszczenie się i pękanie suchej skóry. Stosuj rano i / lub wieczorem.</strong>"
+          },
+          {
+            imageUrl: "https://shop49275-1.iai-shop.com/data/include/cms/wdrozenie/opisy/image_59.webp?v=1744110330378",
+            headline: "Wskazania:",
+            content: "<ul>\n<li>skóra wrażliwa, nadreaktywna, alergiczna,</li>\n<li>skóra ze skłonnością do silnego przesuszenia lub atopii,</li>\n<li>zaburzenia równowagi skóry  wynikające z terapii dermatologicznych, a także inwazyjnych zabiegów kosmetycznych.</li>\n</ul>"
+          },
+          {
+            imageUrl: "https://shop49275-1.iai-shop.com/data/include/cms/wdrozenie/opisy/image_60.webp?v=1744110330378",
+            headline: "Działanie:",
+            content: "<ul>\n<li>przywraca równowagę skórnej mikrobioty,</li>\n<li>wzmacnia barierę ochronną skóry,</li>\n<li>intensywnie nawilża,</li>\n<li>odżywia,</li>\n<li>zmiękcza,</li>\n<li>redukuje szorstkość,</li>\n<li>łagodzi podrażnienia.</li>\n</ul>"
+          }
+        ]
+      },
+      composition: {
+        content: [
+          "<strong>Bioecolia -</strong> polisacharyd (α-glukan) otrzymany opatentowaną metodą enzymatycznej syntezy z cukrów naturalnych. Chroni i stymuluje naturalną zdolność obronną skóry poprzez działanie jako bioselektywny substrat (prebiotyk) dla pożytecznych mikroorganizmów, kosztem patogenów. Bioecolia równoważy i stymuluje mikrobiotę skóry, wspomagając pierwszą linię obrony przed atakiem z zewnątrz.",
+          "<strong>Oliwa z oliwek&nbsp;–</strong> w większości składa się z kwasu oleinowego, który tworzy na powierzchni skóry delikatną warstwę ochronną, przeciwdziałając utracie wody. W składzie oliwy obecny jest także kwas linolowy, który redukuje stany zapalne oraz normalizuje proces rogowacenia naskórka. W oliwie znajdziemy również polifenole o właściwościach antyoksydacyjnych i przeciwzapalnych. Oliwa z oliwek zmiękcza i świetnie łagodzi podrażnienia wysuszonej skóry."
+        ]
+      },
+      features: {
+        items: [
+          {
+            iconUrl: "https://shop49275-1.iai-shop.com/data/include/cms/wdrozenie/ikony/cruelty_free_1x.webp?v=1744108211366",
+            text: "Przyjazny zwierzętom"
+          },
+          {
+            iconUrl: "https://shop49275-1.iai-shop.com/data/include/cms/wdrozenie/ikony/natural_origin_1x.webp?v=1744108211366",
+            text: "Dominują składniki naturalnego pochodzenia"
+          },
+          {
+            iconUrl: "https://shop49275-1.iai-shop.com/data/include/cms/wdrozenie/ikony/paraben_free_1x.webp?v=1744108211365",
+            text: "Nie zawiera parabenów"
+          }
+        ]
+      }
+    };
+    
+    // Zmienna do przechowywania aktywnego elementu
+    let activeElement = null;
+    
+    // Funkcja do formatowania tekstu
+    function formatText(command) {
+      if (!activeElement) {
+        alert('Najpierw zaznacz pole tekstowe!');
+        return;
+      }
+      
+      // Pobierz aktualne zaznaczenie
+      const start = activeElement.selectionStart;
+      const end = activeElement.selectionEnd;
+      const selectedText = activeElement.value.substring(start, end);
+      
+      let formattedText = '';
+      
+      switch (command) {
+        case 'bold':
+          formattedText = `<strong>${selectedText}</strong>`;
+          break;
+        case 'italic':
+          formattedText = `<em>${selectedText}</em>`;
+          break;
+        case 'underline':
+          formattedText = `<u>${selectedText}</u>`;
+          break;
+        case 'strong':
+          formattedText = `<strong>${selectedText}</strong>`;
+          break;
+        case 'em':
+          formattedText = `<em>${selectedText}</em>`;
+          break;
+        case 'ul':
+          if (selectedText.trim() === '') {
+            formattedText = "<ul>\n<li></li>\n</ul>";
+          } else {
+            const lines = selectedText.split('\n');
+            formattedText = "<ul>\n" + lines.map(line => `<li>${line.trim()}</li>`).join('\n') + "\n</ul>";
+          }
+          break;
+        case 'ol':
+          if (selectedText.trim() === '') {
+            formattedText = "<ol>\n<li></li>\n</ol>";
+          } else {
+            const lines = selectedText.split('\n');
+            formattedText = "<ol>\n" + lines.map(line => `<li>${line.trim()}</li>`).join('\n') + "\n</ol>";
+          }
+          break;
+        case 'link':
+          // Otwórz popup do wstawiania linku
+          document.getElementById('linkText').value = selectedText;
+          document.getElementById('overlay').style.display = 'block';
+          document.getElementById('linkPopup').style.display = 'block';
+          return;
+      }
+      
+      // Wstaw sformatowany tekst
+      if (formattedText) {
+        activeElement.value = activeElement.value.substring(0, start) + formattedText + activeElement.value.substring(end);
+        
+        // Ustaw nową pozycję kursora
+        const newCursorPos = start + formattedText.length;
+        activeElement.setSelectionRange(newCursorPos, newCursorPos);
+      }
+    }
+    
+    // Funkcja do wstawiania linku
+    function insertLink() {
+      const linkUrl = document.getElementById('linkUrl').value;
+      const linkText = document.getElementById('linkText').value || linkUrl;
+      
+      if (!linkUrl) {
+        alert('Podaj URL linku!');
+        return;
+      }
+      
+      const formattedLink = `<a href="${linkUrl}">${linkText}</a>`;
+      
+      if (activeElement) {
+        const start = activeElement.selectionStart;
+        const end = activeElement.selectionEnd;
+        
+        activeElement.value = activeElement.value.substring(0, start) + formattedLink + activeElement.value.substring(end);
+      }
+      
+      closePopup();
+    }
+    
+    // Funkcja do zamykania popupu
+    function closePopup() {
+      document.getElementById('overlay').style.display = 'none';
+      document.getElementById('linkPopup').style.display = 'none';
+      document.getElementById('linkUrl').value = '';
+    }
+    
+    // Funkcja do dodawania wiersza opisu
+    function addDescriptionRow(imageUrl = "", headline = "", content = "", afterElement = null) {
+      const container = document.getElementById("description-rows");
+      const rowId = "desc-row-" + Date.now();
+      
+      const rowHtml = `
+        <div class="row" id="${rowId}">
+          <div class="form-group">
+            <label>URL obrazka:</label>
+            <input type="text" class="desc-image" value="${imageUrl}" onchange="updateImagePreview(this)">
+            <img src="${imageUrl}" class="img-preview" style="${imageUrl ? 'display:block' : ''}">
+          </div>
+          
+          <div class="form-group">
+            <label>Nagłówek:</label>
+            <input type="text" class="desc-headline" value="${headline}">
+          </div>
+          
+          <div class="form-group">
+            <label>Treść (HTML):</label>
+            <textarea class="desc-content html-content">${content}</textarea>
+          </div>
+          
+          <div class="row-actions">
+            <button type="button" class="delete" onclick="removeElement('${rowId}')">Usuń sekcję</button>
+            <button type="button" class="add-inline" onclick="addDescriptionRow('', '', '', document.getElementById('${rowId}'))">Dodaj sekcję po tej</button>
+          </div>
+        </div>
+      `;
+      
+      if (afterElement) {
+        afterElement.insertAdjacentHTML('afterend', rowHtml);
+      } else {
+        container.insertAdjacentHTML('beforeend', rowHtml);
+      }
+      
+      // Dodaj listener dla tekstów
+      const newRow = document.getElementById(rowId);
+      setupTextareaListeners(newRow.querySelector('.html-content'));
+    }
+    
+    // Funkcja do aktualizacji podglądu obrazka
+    function updateImagePreview(input) {
+      const preview = input.nextElementSibling;
+      if (input.value) {
+        preview.src = input.value;
+        preview.style.display = 'block';
+      } else {
+        preview.style.display = 'none';
+      }
+    }
+    
+    // Funkcja do dodawania składnika
+    function addIngredient(content = "", afterElement = null) {
+      const container = document.getElementById("ingredients-container");
+      const ingredientId = "ingredient-" + Date.now();
+      
+      const ingredientHtml = `
+        <div class="row" id="${ingredientId}">
+          <div class="form-group">
+            <label>Składnik (HTML):</label>
+            <textarea class="ingredient-content html-content">${content}</textarea>
+          </div>
+          
+          <div class="row-actions">
+            <button type="button" class="delete" onclick="removeElement('${ingredientId}')">Usuń składnik</button>
+            <button type="button" class="add-inline" onclick="addIngredient('', document.getElementById('${ingredientId}'))">Dodaj składnik po tym</button>
+          </div>
+        </div>
+      `;
+      
+      if (afterElement) {
+        afterElement.insertAdjacentHTML('afterend', ingredientHtml);
+      } else {
+        container.insertAdjacentHTML('beforeend', ingredientHtml);
+      }
+      
+      // Dodaj listener dla tekstu
+      const newRow = document.getElementById(ingredientId);
+      setupTextareaListeners(newRow.querySelector('.html-content'));
+    }
+    
+    // Funkcja do dodawania cechy produktu
+    function addFeature(iconUrl = "", text = "", afterElement = null) {
+      const container = document.getElementById("features-container");
+      const featureId = "feature-" + Date.now();
+      
+      const featureHtml = `
+        <div class="row" id="${featureId}">
+          <div class="form-group">
+            <label>URL ikony:</label>
+            <input type="text" class="feature-icon" value="${iconUrl}" onchange="updateImagePreview(this)">
+            <img src="${iconUrl}" class="img-preview" style="${iconUrl ? 'display:block' : ''}">
+          </div>
+          
+          <div class="form-group">
+            <label>Tekst cechy:</label>
+            <input type="text" class="feature-text" value="${text}">
+          </div>
+          
+          <div class="row-actions">
+            <button type="button" class="delete" onclick="removeElement('${featureId}')">Usuń cechę</button>
+            <button type="button" class="add-inline" onclick="addFeature('', '', document.getElementById('${featureId}'))">Dodaj cechę po tej</button>
+          </div>
+        </div>
+      `;
+      
+      if (afterElement) {
+        afterElement.insertAdjacentHTML('afterend', featureHtml);
+      } else {
+        container.insertAdjacentHTML('beforeend', featureHtml);
+      }
+    }
+    
+    // Funkcja do usuwania elementu
+    function removeElement(elementId) {
+      const element = document.getElementById(elementId);
+      if (element) {
+        element.remove();
+      }
+    }
+    
+    // Funkcja do generowania HTML
+    function generateHtml() {
+      let html = '';
+      
+      // 1. Opis główny
+      html += '<!-- ZAKŁADKA OPIS -->\n';
+      html += '<div id="description" class="desc">\n';
+      
+      // Wiersze opisu
+      const descRows = document.querySelectorAll("#description-rows .row");
+      descRows.forEach(row => {
+        const imageUrl = row.querySelector('.desc-image').value;
+        const headline = row.querySelector('.desc-headline').value;
+        const content = row.querySelector('.desc-content').value;
+        
+        html += '  <div class="desc__row">\n';
+        html += '    <div class="desc__image">\n';
+        html += `      <img src="${imageUrl}" alt="" loading="lazy">\n`;
+        html += '    </div>\n';
+        html += '    <div class="desc__content">\n';
+        html += `      <h3 class="desc__headline">${headline}</h3>\n`;
+        html += `      <p>\n        ${content}\n      </p>\n`;
+        html += '    </div>\n';
+        html += '  </div>\n';
+      });
+      
+      // Rezultaty
+      const resultsHeadline = document.getElementById('results-headline').value;
+      const resultsContent = document.getElementById('results-content').value;
+      
+      html += '  <div class="desc__results">\n';
+      html += `    <h3 class="desc__headline">${resultsHeadline}</h3>\n`;
+      html += `    ${resultsContent}\n`;
+      html += '  </div>\n';
+      html += '</div>\n\n';
+      
+      // 2. Skład
+      html += '<!-- ZAKŁADKA SKŁAD -->\n';
+      html += '<div id="composition" class="desc">\n';
+      
+      // Nagłówek składników
+      const compositionHeadline = document.getElementById('composition-headline').value;
+      html += `  <h3 class="desc__headline">${compositionHeadline}</h3>\n`;
+      
+      // Składniki
+      const ingredients = document.querySelectorAll("#ingredients-container .row");
+      ingredients.forEach(ingredient => {
+        const content = ingredient.querySelector('.ingredient-content').value;
+        html += `  <p>${content}</p>\n`;
+      });
+      
+      // INCI
+      const inciContent = document.getElementById('inci-content').value;
+      html += '  <div class="desc__results">\n';
+      html += `    <p>${inciContent}</p>\n`;
+      html += '  </div>\n';
+      html += '</div>\n\n';
+      
+      // 3. Cechy produktu
+      html += '<!-- ZAKŁADKA CECHY PRODUKTU -->\n';
+      html += '<div id="feature" class="desc">\n';
+      
+      // Nagłówek cech
+      const featuresHeadline = document.getElementById('features-headline').value;
+      html += `  <h3 class="desc__headline">${featuresHeadline}</h3>\n`;
+      html += '  <div class="desc__features">\n';
+      
+      // Cechy
+      const features = document.querySelectorAll("#features-container .row");
+      features.forEach(feature => {
+        const iconUrl = feature.querySelector('.feature-icon').value;
+        const text = feature.querySelector('.feature-text').value;
+        
+        html += '    <div class="desc__feature">\n';
+        html += `      <div class="desc__icon"><img src="${iconUrl}" alt="" loading="lazy"></div><span>${text}</span></div>\n`;
+      });
+      
+      html += '  </div>\n';
+      html += '</div>';
+      
+      return html;
+    }
+    
+    // Funkcja do otwierania podglądu w nowym oknie
+    function openPreview() {
+      const html = generateHtml();
+      
+      // CSS dla podglądu
+      const css = `
+        .desc {
+          font-family: Arial, sans-serif;
+          line-height: 1.6;
+          max-width: 1000px;
+          margin: 0 auto;
+          padding: 20px;
+        }
+        
+        .desc__row {
+          display: flex;
+          margin-bottom: 2rem;
+          align-items: flex-start;
+        }
+        
+        .desc__image {
+          flex: 0 0 200px;
+          margin-right: 1.5rem;
+        }
+        
+        .desc__image img {
+          max-width: 100%;
+          height: auto;
+        }
+        
+        .desc__content {
+          flex: 1;
+        }
+        
+        .desc__headline {
+          font-size: 1.25rem;
+          font-weight: 600;
+          margin-bottom: 0.75rem;
+        }
+        
+        .desc ul {
+          padding-left: 1.5rem;
+          margin-bottom: 1rem;
+        }
+        
+        .desc__results {
+          margin-top: 1.5rem;
+          padding: 1rem;
+          background-color: #f9f9f9;
+          border-radius: 0.375rem;
+        }
+        
+        .desc__features {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 1rem;
+        }
+        
+        .desc__feature {
+          display: flex;
+          align-items: center;
+          flex: 0 0 calc(25% - 1rem);
+          min-width: 200px;
+        }
+        
+        .desc__icon {
+          width: 40px;
+          height: 40px;
+          margin-right: 0.5rem;
+        }
+        
+        .desc__icon img {
+          max-width: 100%;
+          height: auto;
+        }
+        
+        @media (max-width: 768px) {
+          .desc__row {
+            flex-direction: column;
+          }
+          
+          .desc__image {
+            margin-right: 0;
+            margin-bottom: 1rem;
+            flex: none;
+            width: 100%;
+          }
+          
+          .desc__feature {
+            flex: 0 0 100%;
+          }
+        }
+      `;
+      
+      // Otwórz nowe okno i dodaj treść HTML
+      const previewWindow = window.open('', '_blank');
+      previewWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Podgląd opisu produktu</title>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>${css}</style>
+        </head>
+        <body>
+          ${html}
+        </body>
+        </html>
+      `);
+      previewWindow.document.close();
+    }
+    
+    // Funkcja do ustawienia aktywnego elementu i auto-resize
+    function setupTextareaListeners(textarea) {
+      textarea.addEventListener('focus', function() {
+        activeElement = this;
+      });
+      
+      textarea.addEventListener('blur', function() {
+        // Nie resetujemy activeElement tutaj, aby można było używać przycisków po kliknięciu na nie
+      });
+      
+      // Auto-resize dla textarea
+      textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+      });
+      
+      // Inicjalne ustawienie wysokości
+      setTimeout(function() {
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight) + 'px';
+      }, 0);
+    }
+    
+    // Inicjalizacja strony
+    document.addEventListener('DOMContentLoaded', function() {
+      // Dodaj początkowe dane
+      initialData.description.rows.forEach(row => {
+        addDescriptionRow(row.imageUrl, row.headline, row.content);
+      });
+      
+      initialData.composition.content.forEach(content => {
+        addIngredient(content);
+      });
+      
+      initialData.features.items.forEach(item => {
+        addFeature(item.iconUrl, item.text);
+      });
+      
+      // Obsługa przycisków
+      document.getElementById('add-description-row').addEventListener('click', function() {
+        addDescriptionRow();
+      });
+      
+      document.getElementById('add-ingredient').addEventListener('click', function() {
+        addIngredient('<strong>Nowy składnik</strong> - opis składnika');
+      });
+      
+      document.getElementById('add-feature').addEventListener('click', function() {
+        addFeature('', 'Nowa cecha produktu');
+      });
+      
+      // Przyciski w toolbarze
+      document.getElementById('generate-preview').addEventListener('click', openPreview);
+      
+      document.getElementById('copy-html').addEventListener('click', function() {
+        const html = generateHtml();
+        navigator.clipboard.writeText(html)
+          .then(() => alert('Kod HTML został skopiowany do schowka!'))
+          .catch(err => {
+            console.error('Błąd podczas kopiowania:', err);
+            alert('Nie udało się skopiować kodu. Spróbuj ręcznie zaznaczyć i skopiować.');
+          });
+      });
+      
+      // Usuń przyciski na dole, bo są już na górze
+      
+      // Dodaj nasłuchiwacze zdarzeń dla wszystkich pól tekstowych z klasą html-content
+      document.querySelectorAll('.html-content').forEach(textarea => {
+        setupTextareaListeners(textarea);
+      });
+      
+      // Dodaj nasłuchiwacz dla rezultatów
+      setupTextareaListeners(document.getElementById('results-content'));
+      setupTextareaListeners(document.getElementById('inci-content'));
+      
+      // Zamykanie popupu po kliknięciu w overlay
+      document.getElementById('overlay').addEventListener('click', closePopup);
+    });
+  </script>
+</body>
+</html>
