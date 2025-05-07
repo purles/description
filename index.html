@@ -38,13 +38,32 @@
       border-radius: 5px;
     }
     
+    /* Bardziej wyraźne oddzielenie rzędów */
     .row {
-      margin-bottom: 20px;
+      margin-bottom: 25px;
       padding: 15px;
-      border: 1px solid #eee;
+      border: 2px solid #aaa;
       border-radius: 5px;
       background-color: #f9f9f9;
       position: relative;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    }
+    
+    .row + .row {
+      margin-top: 35px;
+      border-top: 3px solid #888;
+      padding-top: 25px;
+    }
+    
+    /* Dodatkowa linia oddzielająca sekcje */
+    .row:after {
+      content: '';
+      position: absolute;
+      bottom: -15px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background-color: #ddd;
     }
     
     .form-group {
@@ -208,6 +227,47 @@
       background-color: #4CAF50;
       margin-left: 10px;
     }
+
+    /* Style dla siatki predefiniowanych cech produktu */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      padding: 1px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .feature-item:hover {
+      background-color: #f0f0f0;
+    }
+
+    .feature-item.selected {
+      background-color: #e3f2fd;
+      border-color: #2196F3;
+    }
+
+    .feature-icon {
+      width: 100px;
+      height: 100px;
+      margin-right: 5px;
+      object-fit: contain;
+    }
+
+    .feature-text {
+      flex-grow: 1;
+      font-size: 14px;
+    }
+
+    /* Usunięto style mobilne */
   </style>
 </head>
 <body>
@@ -222,6 +282,7 @@
     <button type="button" onclick="formatText('ol')" title="Lista numerowana">1.</button>
     <button type="button" onclick="formatText('strong')" title="Wyróżnienie">S</button>
     <button type="button" onclick="formatText('em')" title="Emfaza">E</button>
+    <button type="button" onclick="undoLastAction()" title="Cofnij ostatnią akcję">↩️</button>
     <div class="divider"></div>
     <div style="flex-grow: 1;"></div>
     <button type="button" id="generate-preview" class="preview action-btn" title="Podgląd w nowym oknie">👁️ Podgląd</button>
@@ -300,11 +361,14 @@
         <input type="text" id="features-headline" value="Cechy produktu:">
       </div>
       
-      <div id="features-container">
-        <!-- Cechy będą dodawane dynamicznie -->
+      <!-- Siatka z predefiniowanymi cechami produktu -->
+      <div class="features-grid" id="predefined-features">
+        <!-- Tu będą dodane predefiniowane cechy produktu -->
       </div>
       
-      <button type="button" id="add-feature">Dodaj cechę produktu</button>
+      <div id="features-container">
+        <!-- Wybrane cechy będą dodawane dynamicznie -->
+      </div>
     </div>
     
     <!-- Akcje -->
@@ -315,6 +379,66 @@
   </div>
 
   <script>
+    // Predefiniowane cechy produktu
+    const predefinedFeatures = [
+      { 
+        iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/cruelty_free.png", 
+        text: "Przyjazny zwierzętom" 
+      },
+      { 
+        iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/dermatologicaly_tested.png", 
+        text: "Przebadany dermatologicznie" 
+      },
+      { 
+        iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/gluten_free.png", 
+        text: "Nie zawiera glutenu" 
+      },
+      { 
+        iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/natural_ingredients.png", 
+        text: "Dominują składniki naturalnego pochodzenia" 
+      },
+      { 
+        iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/no_harsh_chemicals.png", 
+        text: "Bez agresywnych składników" 
+      },
+      { 
+        iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/no_mineral_oils.png", 
+        text: "Nie zawiera olei mineralnych" 
+      },
+      { 
+        iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/no_sls.png", 
+        text: "Nie zawiera SLS/SLES" 
+      },
+      { 
+        iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/no_tea.png", 
+        text: "Nie zawiera trietanoloaminy" 
+      },
+      { 
+        iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/non_gmo.png", 
+        text: "Bez modyfikacji genetycznych" 
+      },
+      { 
+        iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/paraben_free.png", 
+        text: "Nie zawiera parabenów" 
+      },
+      { 
+        iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/PEG.png", 
+        text: "Nie zawiera substancji z grupy PEG" 
+      },
+      { 
+        iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/petrochemical_free.png", 
+        text: "Nie zawiera związków pochodnych ropy naftowe" 
+      },
+      { 
+        iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/silicon_free.png", 
+        text: "Nie zawiera silikonów" 
+      },
+      { 
+        iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/vegan.png", 
+        text: "Produkt wegański" 
+      }
+    ];
+    
     // Dane początkowe
     const initialData = {
       description: {
@@ -343,17 +467,18 @@
         ]
       },
       features: {
+        // Przykładowe wybrane funkcje
         items: [
           {
-            iconUrl: "https://shop49275-1.iai-shop.com/data/include/cms/wdrozenie/ikony/cruelty_free_1x.webp?v=1744108211366",
+            iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/cruelty_free.png", 
             text: "Przyjazny zwierzętom"
           },
           {
-            iconUrl: "https://shop49275-1.iai-shop.com/data/include/cms/wdrozenie/ikony/natural_origin_1x.webp?v=1744108211366",
+            iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/natural_ingredients.png", 
             text: "Dominują składniki naturalnego pochodzenia"
           },
           {
-            iconUrl: "https://shop49275-1.iai-shop.com/data/include/cms/wdrozenie/ikony/paraben_free_1x.webp?v=1744108211365",
+            iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/paraben_free.png", 
             text: "Nie zawiera parabenów"
           }
         ]
@@ -374,6 +499,10 @@
       const start = activeElement.selectionStart;
       const end = activeElement.selectionEnd;
       const selectedText = activeElement.value.substring(start, end);
+      
+      // Zapisz wartość przed zmianą do historii
+      const oldValue = activeElement.value;
+      console.log('Zapisuję stan przed formatowaniem:', oldValue);
       
       let formattedText = '';
       
@@ -424,6 +553,48 @@
         // Ustaw nową pozycję kursora
         const newCursorPos = start + formattedText.length;
         activeElement.setSelectionRange(newCursorPos, newCursorPos);
+        
+        // Zapisz akcję do historii
+        saveAction(activeElement, oldValue);
+      }
+    }
+    
+        // Historia akcji dla cofania
+    let actionHistory = [];
+    
+    // Funkcja do zapisywania akcji w historii
+    function saveAction(element, oldValue) {
+      console.log('Zapisuję akcję do historii:', { element, oldValue });
+      if (actionHistory.length >= 20) {
+        actionHistory.shift(); // Usuń najstarszą akcję, jeśli historia jest zbyt długa
+      }
+      actionHistory.push({
+        element: element,
+        value: oldValue
+      });
+    }
+    
+    // Funkcja do cofania ostatniej akcji
+    function undoLastAction() {
+      console.log('Historia akcji:', actionHistory);
+      if (actionHistory.length === 0) {
+        alert('Brak akcji do cofnięcia');
+        return;
+      }
+      
+      const lastAction = actionHistory.pop();
+      console.log('Cofam akcję:', lastAction);
+      
+      if (lastAction.element && document.contains(lastAction.element)) {
+        console.log('Przywracam wartość:', lastAction.value);
+        lastAction.element.value = lastAction.value;
+        // Wywołaj event, który zaktualizuje wysokość textarea
+        const event = new Event('input', { bubbles: true });
+        lastAction.element.dispatchEvent(event);
+        activeElement = lastAction.element;
+      } else {
+        console.log('Element już nie istnieje');
+        alert('Nie można cofnąć tej akcji');
       }
     }
     
@@ -440,10 +611,12 @@
       const formattedLink = `<a href="${linkUrl}">${linkText}</a>`;
       
       if (activeElement) {
+        const oldValue = activeElement.value;
         const start = activeElement.selectionStart;
         const end = activeElement.selectionEnd;
         
         activeElement.value = activeElement.value.substring(0, start) + formattedLink + activeElement.value.substring(end);
+        saveAction(activeElement, oldValue);
       }
       
       closePopup();
@@ -538,42 +711,118 @@
       setupTextareaListeners(newRow.querySelector('.html-content'));
     }
     
-    // Funkcja do dodawania cechy produktu
-    function addFeature(iconUrl = "", text = "", afterElement = null) {
+    // Funkcja do dodawania wybranej cechy produktu do listy
+    function addFeatureToList(feature) {
       const container = document.getElementById("features-container");
-      const featureId = "feature-" + Date.now();
+      const featureId = "selected-feature-" + Date.now();
       
       const featureHtml = `
         <div class="row" id="${featureId}">
           <div class="form-group">
-            <label>URL ikony:</label>
-            <input type="text" class="feature-icon" value="${iconUrl}" onchange="updateImagePreview(this)">
-            <img src="${iconUrl}" class="img-preview" style="${iconUrl ? 'display:block' : ''}">
-          </div>
-          
-          <div class="form-group">
-            <label>Tekst cechy:</label>
-            <input type="text" class="feature-text" value="${text}">
+            <label>Cecha produktu:</label>
+            <div style="display: flex; align-items: center;">
+              <img src="${feature.iconUrl}" alt="" style="width: 40px; height: 40px; margin-right: 10px;">
+              <span>${feature.text}</span>
+            </div>
           </div>
           
           <div class="row-actions">
             <button type="button" class="delete" onclick="removeElement('${featureId}')">Usuń cechę</button>
-            <button type="button" class="add-inline" onclick="addFeature('', '', document.getElementById('${featureId}'))">Dodaj cechę po tej</button>
           </div>
         </div>
       `;
       
-      if (afterElement) {
-        afterElement.insertAdjacentHTML('afterend', featureHtml);
+      container.insertAdjacentHTML('beforeend', featureHtml);
+      
+      // Odśwież wybrane cechy w interfejsie
+      updateSelectedFeaturesUI();
+    }
+    
+    // Funkcja do obsługi wyboru predefiniowanej cechy
+    function toggleFeature(index) {
+      const feature = predefinedFeatures[index];
+      const featureElement = document.querySelector(`#feature-item-${index}`);
+      
+      if (featureElement.classList.contains('selected')) {
+        // Usuń cechę z wybranych
+        featureElement.classList.remove('selected');
+        
+        // Znajdź i usuń odpowiadający element z listy wybranych cech
+        const selectedFeatures = getSelectedFeatures();
+        const featureContainer = document.getElementById("features-container");
+        const featureRows = featureContainer.querySelectorAll('.row');
+        
+        for (const row of featureRows) {
+          const imgSrc = row.querySelector('img').src;
+          if (imgSrc === feature.iconUrl) {
+            row.remove();
+            break;
+          }
+        }
       } else {
-        container.insertAdjacentHTML('beforeend', featureHtml);
+        // Dodaj cechę do wybranych
+        featureElement.classList.add('selected');
+        addFeatureToList(feature);
       }
+    }
+    
+    // Funkcja do aktualizacji UI dla wybranych cech
+    function updateSelectedFeaturesUI() {
+      const selectedFeatures = getSelectedFeatures();
+      const predefinedGrid = document.getElementById("predefined-features");
+      const featureItems = predefinedGrid.querySelectorAll('.feature-item');
+      
+      // Zaznacz odpowiednie elementy w siatce predefiniowanych cech
+      featureItems.forEach((item, index) => {
+        const feature = predefinedFeatures[index];
+        const isSelected = selectedFeatures.some(f => f.iconUrl === feature.iconUrl);
+        
+        if (isSelected) {
+          item.classList.add('selected');
+        } else {
+          item.classList.remove('selected');
+        }
+      });
+    }
+    
+    // Funkcja do pobierania aktualnie wybranych cech
+    function getSelectedFeatures() {
+      const featureContainer = document.getElementById("features-container");
+      const featureRows = featureContainer.querySelectorAll('.row');
+      const selectedFeatures = [];
+      
+      featureRows.forEach(row => {
+        const imgSrc = row.querySelector('img').src;
+        const text = row.querySelector('span').textContent;
+        
+        selectedFeatures.push({
+          iconUrl: imgSrc,
+          text: text
+        });
+      });
+      
+      return selectedFeatures;
     }
     
     // Funkcja do usuwania elementu
     function removeElement(elementId) {
       const element = document.getElementById(elementId);
       if (element) {
+        // Zapisz stan przed usunięciem do historii (nie jest obecnie obsługiwane)
+        console.log('Element usunięty:', elementId);
+        
+        // Jeśli to jest wybrana cecha, zaktualizuj również UI w siatce
+        if (elementId.startsWith('selected-feature-')) {
+          const featureText = element.querySelector('span').textContent;
+          const featureItems = document.querySelectorAll('.feature-item');
+          
+          featureItems.forEach(item => {
+            if (item.querySelector('.feature-text').textContent === featureText) {
+              item.classList.remove('selected');
+            }
+          });
+        }
+        
         element.remove();
       }
     }
@@ -645,14 +894,11 @@
       html += `  <h3 class="desc__headline">${featuresHeadline}</h3>\n`;
       html += '  <div class="desc__features">\n';
       
-      // Cechy
-      const features = document.querySelectorAll("#features-container .row");
-      features.forEach(feature => {
-        const iconUrl = feature.querySelector('.feature-icon').value;
-        const text = feature.querySelector('.feature-text').value;
-        
+      // Wybrane cechy
+      const selectedFeatures = getSelectedFeatures();
+      selectedFeatures.forEach(feature => {
         html += '    <div class="desc__feature">\n';
-        html += `      <div class="desc__icon"><img src="${iconUrl}" alt="" loading="lazy"></div><span>${text}</span></div>\n`;
+        html += `      <div class="desc__icon"><img src="${feature.iconUrl}" alt="" loading="lazy"></div><span>${feature.text}</span></div>\n`;
       });
       
       html += '  </div>\n';
@@ -797,8 +1043,30 @@
       }, 0);
     }
     
+    // Funkcja do renderowania predefiniowanych cech
+    function renderPredefinedFeatures() {
+      const container = document.getElementById("predefined-features");
+      
+      predefinedFeatures.forEach((feature, index) => {
+        const featureItem = document.createElement('div');
+        featureItem.className = 'feature-item';
+        featureItem.id = `feature-item-${index}`;
+        featureItem.onclick = () => toggleFeature(index);
+        
+        featureItem.innerHTML = `
+          <img src="${feature.iconUrl}" alt="" class="feature-icon">
+          <div class="feature-text">${feature.text}</div>
+        `;
+        
+        container.appendChild(featureItem);
+      });
+    }
+    
     // Inicjalizacja strony
     document.addEventListener('DOMContentLoaded', function() {
+      // Renderuj predefiniowane cechy
+      renderPredefinedFeatures();
+      
       // Dodaj początkowe dane
       initialData.description.rows.forEach(row => {
         addDescriptionRow(row.imageUrl, row.headline, row.content);
@@ -808,9 +1076,24 @@
         addIngredient(content);
       });
       
-      initialData.features.items.forEach(item => {
-        addFeature(item.iconUrl, item.text);
+      // Zakomentowane - bez domyślnie zaznaczonych cech
+      /*
+      initialData.features.items.forEach(feature => {
+        // Znajdź cechę w predefiniowanych i zaznacz ją
+        const index = predefinedFeatures.findIndex(f => f.text === feature.text);
+        if (index !== -1) {
+          // Dodaj cechę do listy wybranych
+          addFeatureToList(feature);
+          // Zaznacz w siatce predefiniowanych
+          setTimeout(() => {
+            const featureElement = document.querySelector(`#feature-item-${index}`);
+            if (featureElement) {
+              featureElement.classList.add('selected');
+            }
+          }, 100);
+        }
       });
+      */
       
       // Obsługa przycisków
       document.getElementById('add-description-row').addEventListener('click', function() {
@@ -818,11 +1101,7 @@
       });
       
       document.getElementById('add-ingredient').addEventListener('click', function() {
-        addIngredient('<strong>Nowy składnik</strong> - opis składnika');
-      });
-      
-      document.getElementById('add-feature').addEventListener('click', function() {
-        addFeature('', 'Nowa cecha produktu');
+        addIngredient('<strong>Składnik</strong> - tutaj wpisz opis składnika');
       });
       
       // Przyciski w toolbarze
@@ -837,8 +1116,6 @@
             alert('Nie udało się skopiować kodu. Spróbuj ręcznie zaznaczyć i skopiować.');
           });
       });
-      
-      // Usuń przyciski na dole, bo są już na górze
       
       // Dodaj nasłuchiwacze zdarzeń dla wszystkich pól tekstowych z klasą html-content
       document.querySelectorAll('.html-content').forEach(textarea => {
