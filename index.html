@@ -135,6 +135,14 @@
       background-color: #e68a00;
     }
     
+    button.save {
+      background-color: #9c27b0;
+    }
+    
+    button.save:hover {
+      background-color: #7b1fa2;
+    }
+    
     .toolbar {
       position: sticky;
       top: 0;
@@ -145,6 +153,7 @@
       display: flex;
       gap: 10px;
       z-index: 100;
+      align-items: center;
     }
     
     .toolbar button {
@@ -172,6 +181,25 @@
       width: 1px;
       background-color: #777;
       margin: 0 5px;
+      height: 40px;
+    }
+    
+    .toolbar .sku-input {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-right: auto;
+    }
+    
+    .toolbar .sku-input label {
+      color: white;
+      margin: 0;
+    }
+    
+    .toolbar .sku-input input {
+      width: 100px;
+      padding: 8px;
+      font-size: 14px;
     }
     
     .img-preview {
@@ -273,6 +301,11 @@
 <body>
   <!-- Pasek narzędzi -->
   <div class="toolbar">
+    <div class="sku-input">
+      <label for="sku-number">SKU:</label>
+      <input type="text" id="sku-number" placeholder="np. 165" onchange="updateImageNames()">
+    </div>
+    <div class="divider"></div>
     <button type="button" onclick="formatText('bold')" title="Pogrubienie">B</button>
     <button type="button" onclick="formatText('italic')" title="Kursywa">I</button>
     <button type="button" onclick="formatText('underline')" title="Podkreślenie">U</button>
@@ -287,6 +320,7 @@
     <div style="flex-grow: 1;"></div>
     <button type="button" id="generate-preview" class="preview action-btn" title="Podgląd w nowym oknie">👁️ Podgląd</button>
     <button type="button" id="copy-html" class="copy action-btn" title="Kopiuj kod HTML">📋 Kopiuj HTML</button>
+    <button type="button" id="save-html" class="save action-btn" title="Zapisz plik HTML">💾 Zapisz plik</button>
   </div>
   
   <!-- Popup do wstawiania linków -->
@@ -387,7 +421,7 @@
       },
       { 
         iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/dermatologicaly_tested.png", 
-        text: "Przebadany dermatologicznie" 
+        text: "Testowany dermatologicznie" 
       },
       { 
         iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/gluten_free.png", 
@@ -427,7 +461,7 @@
       },
       { 
         iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/petrochemical_free.png", 
-        text: "Nie zawiera związków pochodnych ropy naftowe" 
+        text: "Nie zawiera związków pochodnych ropy naftowej" 
       },
       { 
         iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/silicon_free.png", 
@@ -435,7 +469,7 @@
       },
       { 
         iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/vegan.png", 
-        text: "Produkt wegański" 
+        text: "Wegański" 
       }
     ];
     
@@ -487,6 +521,117 @@
     
     // Zmienna do przechowywania aktywnego elementu
     let activeElement = null;
+    
+    // Historia akcji dla cofania
+    let actionHistory = [];
+    
+    // Funkcja do zapisywania akcji w historii
+    function saveAction(element, oldValue) {
+      console.log('Zapisuję akcję do historii:', { element, oldValue });
+      if (actionHistory.length >= 50) {
+        actionHistory.shift(); // Usuń najstarszą akcję, jeśli historia jest zbyt długa
+      }
+      actionHistory.push({
+        element: element,
+        value: oldValue,
+        type: 'text-change'
+      });
+    }
+    
+    // Funkcja do zapisywania stanu całego dokumentu
+    function saveDocumentState() {
+      const state = {
+        type: 'document-state',
+        descriptionRows: [],
+        ingredients: [],
+        features: getSelectedFeatures(),
+        resultsHeadline: document.getElementById('results-headline').value,
+        resultsContent: document.getElementById('results-content').value,
+        compositionHeadline: document.getElementById('composition-headline').value,
+        inciContent: document.getElementById('inci-content').value,
+        featuresHeadline: document.getElementById('features-headline').value
+      };
+      
+      // Zapisz stan wierszy opisu
+      document.querySelectorAll("#description-rows .row").forEach(row => {
+        state.descriptionRows.push({
+          imageUrl: row.querySelector('.desc-image').value,
+          headline: row.querySelector('.desc-headline').value,
+          content: row.querySelector('.desc-content').value
+        });
+      });
+      
+      // Zapisz stan składników
+      document.querySelectorAll("#ingredients-container .row").forEach(row => {
+        state.ingredients.push(row.querySelector('.ingredient-content').value);
+      });
+      
+      actionHistory.push(state);
+      if (actionHistory.length > 50) {
+        actionHistory.shift();
+      }
+    }
+    
+    // Funkcja do przywracania stanu dokumentu
+    function restoreDocumentState(state) {
+      // Usuń wszystkie wiersze opisu
+      document.getElementById('description-rows').innerHTML = '';
+      
+      // Przywróć wiersze opisu
+      state.descriptionRows.forEach(row => {
+        addDescriptionRow(row.imageUrl, row.headline, row.content);
+      });
+      
+      // Usuń wszystkie składniki
+      document.getElementById('ingredients-container').innerHTML = '';
+      
+      // Przywróć składniki
+      state.ingredients.forEach(content => {
+        addIngredient(content);
+      });
+      
+      // Przywróć cechy
+      document.getElementById('features-container').innerHTML = '';
+      state.features.forEach(feature => {
+        addFeatureToList(feature);
+      });
+      
+      // Przywróć pozostałe pola
+      document.getElementById('results-headline').value = state.resultsHeadline;
+      document.getElementById('results-content').value = state.resultsContent;
+      document.getElementById('composition-headline').value = state.compositionHeadline;
+      document.getElementById('inci-content').value = state.inciContent;
+      document.getElementById('features-headline').value = state.featuresHeadline;
+      
+      // Zaktualizuj UI
+      updateSelectedFeaturesUI();
+    }
+    
+    // Funkcja do cofania ostatniej akcji
+    function undoLastAction() {
+      console.log('Historia akcji:', actionHistory);
+      if (actionHistory.length === 0) {
+        alert('Brak akcji do cofnięcia');
+        return;
+      }
+      
+      const lastAction = actionHistory.pop();
+      console.log('Cofam akcję:', lastAction);
+      
+      if (lastAction.type === 'document-state') {
+        restoreDocumentState(lastAction);
+      } else if (lastAction.element && document.contains(lastAction.element)) {
+        console.log('Przywracam wartość:', lastAction.value);
+        lastAction.element.value = lastAction.value;
+        // Wywołaj event, który zaktualizuje wysokość textarea
+        const event = new Event('input', { bubbles: true });
+        lastAction.element.dispatchEvent(event);
+        activeElement = lastAction.element;
+      } else {
+        console.log('Element już nie istnieje');
+        alert('Nie można cofnąć tej akcji');
+      }
+    }
     
     // Funkcja do formatowania tekstu
     function formatText(command) {
@@ -559,45 +704,6 @@
       }
     }
     
-        // Historia akcji dla cofania
-    let actionHistory = [];
-    
-    // Funkcja do zapisywania akcji w historii
-    function saveAction(element, oldValue) {
-      console.log('Zapisuję akcję do historii:', { element, oldValue });
-      if (actionHistory.length >= 20) {
-        actionHistory.shift(); // Usuń najstarszą akcję, jeśli historia jest zbyt długa
-      }
-      actionHistory.push({
-        element: element,
-        value: oldValue
-      });
-    }
-    
-    // Funkcja do cofania ostatniej akcji
-    function undoLastAction() {
-      console.log('Historia akcji:', actionHistory);
-      if (actionHistory.length === 0) {
-        alert('Brak akcji do cofnięcia');
-        return;
-      }
-      
-      const lastAction = actionHistory.pop();
-      console.log('Cofam akcję:', lastAction);
-      
-      if (lastAction.element && document.contains(lastAction.element)) {
-        console.log('Przywracam wartość:', lastAction.value);
-        lastAction.element.value = lastAction.value;
-        // Wywołaj event, który zaktualizuje wysokość textarea
-        const event = new Event('input', { bubbles: true });
-        lastAction.element.dispatchEvent(event);
-        activeElement = lastAction.element;
-      } else {
-        console.log('Element już nie istnieje');
-        alert('Nie można cofnąć tej akcji');
-      }
-    }
-    
     // Funkcja do wstawiania linku
     function insertLink() {
       const linkUrl = document.getElementById('linkUrl').value;
@@ -629,8 +735,35 @@
       document.getElementById('linkUrl').value = '';
     }
     
+    // Funkcja do aktualizacji nazw obrazków na podstawie SKU
+    function updateImageNames() {
+      const sku = document.getElementById('sku-number').value.trim();
+      
+      if (!sku) return;
+      
+      const descRows = document.querySelectorAll("#description-rows .row");
+      descRows.forEach((row, index) => {
+        const imageInput = row.querySelector('.desc-image');
+        const currentUrl = imageInput.value;
+        
+        // Zachowaj ścieżkę, zmień tylko nazwę pliku
+        const urlParts = currentUrl.split('/');
+        const filename = urlParts[urlParts.length - 1];
+        
+        // Sprawdź czy to jest placeholder image_XX.webp
+        if (filename.match(/image_\d+\.webp/)) {
+          urlParts[urlParts.length - 1] = `${sku}_${index + 1}.png`;
+          imageInput.value = urlParts.join('/');
+          updateImagePreview(imageInput);
+        }
+      });
+    }
+    
     // Funkcja do dodawania wiersza opisu
     function addDescriptionRow(imageUrl = "", headline = "", content = "", afterElement = null) {
+      // Zapisz stan dokumentu przed dodaniem
+      saveDocumentState();
+      
       const container = document.getElementById("description-rows");
       const rowId = "desc-row-" + Date.now();
       
@@ -668,6 +801,8 @@
       // Dodaj listener dla tekstów
       const newRow = document.getElementById(rowId);
       setupTextareaListeners(newRow.querySelector('.html-content'));
+      setupInputListeners(newRow.querySelector('.desc-headline'));
+      setupInputListeners(newRow.querySelector('.desc-image'));
     }
     
     // Funkcja do aktualizacji podglądu obrazka
@@ -683,6 +818,9 @@
     
     // Funkcja do dodawania składnika
     function addIngredient(content = "", afterElement = null) {
+      // Zapisz stan dokumentu przed dodaniem
+      saveDocumentState();
+      
       const container = document.getElementById("ingredients-container");
       const ingredientId = "ingredient-" + Date.now();
       
@@ -740,6 +878,9 @@
     
     // Funkcja do obsługi wyboru predefiniowanej cechy
     function toggleFeature(index) {
+      // Zapisz stan dokumentu przed zmianą
+      saveDocumentState();
+      
       const feature = predefinedFeatures[index];
       const featureElement = document.querySelector(`#feature-item-${index}`);
       
@@ -806,11 +947,11 @@
     
     // Funkcja do usuwania elementu
     function removeElement(elementId) {
+      // Zapisz stan dokumentu przed usunięciem
+      saveDocumentState();
+      
       const element = document.getElementById(elementId);
       if (element) {
-        // Zapisz stan przed usunięciem do historii (nie jest obecnie obsługiwane)
-        console.log('Element usunięty:', elementId);
-        
         // Jeśli to jest wybrana cecha, zaktualizuj również UI w siatce
         if (elementId.startsWith('selected-feature-')) {
           const featureText = element.querySelector('span').textContent;
@@ -1020,6 +1161,41 @@
       previewWindow.document.close();
     }
     
+    // Funkcja do zapisywania pliku HTML
+    function saveHtmlFile() {
+      const html = generateHtml();
+      const sku = document.getElementById('sku-number').value.trim();
+      
+      // Ustal nazwę pliku
+      let filename = 'opis-produktu.html';
+      if (sku) {
+        filename = `${sku}.html`;
+      } else {
+        // Pobierz pierwszy nagłówek jako nazwę pliku
+        const firstHeadline = document.querySelector('.desc-headline');
+        if (firstHeadline && firstHeadline.value) {
+          // Usuń niedozwolone znaki z nazwy pliku
+          filename = firstHeadline.value.replace(/[^a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ\s-]/g, '').trim() + '.html';
+        }
+      }
+      
+      // Utwórz blob z zawartością HTML
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      
+      // Utwórz link do pobrania
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      
+      // Kliknij link, aby pobrać plik
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Zwolnij pamięć
+      URL.revokeObjectURL(link.href);
+    }
+    
     // Funkcja do ustawienia aktywnego elementu i auto-resize
     function setupTextareaListeners(textarea) {
       textarea.addEventListener('focus', function() {
@@ -1028,6 +1204,19 @@
       
       textarea.addEventListener('blur', function() {
         // Nie resetujemy activeElement tutaj, aby można było używać przycisków po kliknięciu na nie
+      });
+      
+      // Zapisz stan przed każdą zmianą
+      textarea.addEventListener('keydown', function(e) {
+        // Zapisz stan tylko dla klawiszy, które mogą zmienić zawartość
+        if (!e.ctrlKey && !e.metaKey && e.key !== 'Tab' && e.key !== 'Shift' && e.key !== 'Control' && e.key !== 'Alt') {
+          const oldValue = this.value;
+          setTimeout(() => {
+            if (this.value !== oldValue) {
+              saveAction(this, oldValue);
+            }
+          }, 0);
+        }
       });
       
       // Auto-resize dla textarea
@@ -1041,6 +1230,26 @@
         textarea.style.height = 'auto';
         textarea.style.height = (textarea.scrollHeight) + 'px';
       }, 0);
+    }
+    
+    // Funkcja do ustawienia listenerów dla inputów
+    function setupInputListeners(input) {
+      input.addEventListener('focus', function() {
+        activeElement = this;
+      });
+      
+      // Zapisz stan przed każdą zmianą
+      input.addEventListener('keydown', function(e) {
+        // Zapisz stan tylko dla klawiszy, które mogą zmienić zawartość
+        if (!e.ctrlKey && !e.metaKey && e.key !== 'Tab' && e.key !== 'Shift' && e.key !== 'Control' && e.key !== 'Alt') {
+          const oldValue = this.value;
+          setTimeout(() => {
+            if (this.value !== oldValue) {
+              saveAction(this, oldValue);
+            }
+          }, 0);
+        }
+      });
     }
     
     // Funkcja do renderowania predefiniowanych cech
@@ -1076,25 +1285,6 @@
         addIngredient(content);
       });
       
-      // Zakomentowane - bez domyślnie zaznaczonych cech
-      /*
-      initialData.features.items.forEach(feature => {
-        // Znajdź cechę w predefiniowanych i zaznacz ją
-        const index = predefinedFeatures.findIndex(f => f.text === feature.text);
-        if (index !== -1) {
-          // Dodaj cechę do listy wybranych
-          addFeatureToList(feature);
-          // Zaznacz w siatce predefiniowanych
-          setTimeout(() => {
-            const featureElement = document.querySelector(`#feature-item-${index}`);
-            if (featureElement) {
-              featureElement.classList.add('selected');
-            }
-          }, 100);
-        }
-      });
-      */
-      
       // Obsługa przycisków
       document.getElementById('add-description-row').addEventListener('click', function() {
         addDescriptionRow();
@@ -1117,6 +1307,9 @@
           });
       });
       
+      // Przycisk zapisywania pliku
+      document.getElementById('save-html').addEventListener('click', saveHtmlFile);
+      
       // Dodaj nasłuchiwacze zdarzeń dla wszystkich pól tekstowych z klasą html-content
       document.querySelectorAll('.html-content').forEach(textarea => {
         setupTextareaListeners(textarea);
@@ -1125,6 +1318,11 @@
       // Dodaj nasłuchiwacz dla rezultatów
       setupTextareaListeners(document.getElementById('results-content'));
       setupTextareaListeners(document.getElementById('inci-content'));
+      
+      // Dodaj nasłuchiwacze dla inputów
+      setupInputListeners(document.getElementById('results-headline'));
+      setupInputListeners(document.getElementById('composition-headline'));
+      setupInputListeners(document.getElementById('features-headline'));
       
       // Zamykanie popupu po kliknięciu w overlay
       document.getElementById('overlay').addEventListener('click', closePopup);
