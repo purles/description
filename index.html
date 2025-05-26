@@ -336,9 +336,12 @@
       <button type="button" onclick="insertLink()">Wstaw</button>
     </div>
   </div>
+
+  
   
   <div class="container">
-    <h1>Edytor opisów produktów Purles</h1>
+  
+    <h1> <img src="https://purles.pl/wp-content/uploads/2022/04/logo.png" alt="Purles Logo" class="logo" height="50px" margin-right="120px">  Edytor opisów produktów Purles</h1>
     
     <!-- Sekcja 1: Opis główny -->
     <div class="section" id="description-section">
@@ -349,6 +352,16 @@
       </div>
       
       <button type="button" id="add-description-row">Dodaj nową sekcję opisu</button>
+      
+      <div class="form-group" style="margin-top: 20px;">
+        <label>Nagłówek sposobu użycia:</label>
+        <input type="text" id="usage-headline" value="Sposób użycia:">
+      </div>
+      
+      <div class="form-group">
+        <label>Treść sposobu użycia (HTML):</label>
+        <textarea id="usage-content" class="html-content">Nanieś niewielką ilość produktu na suchą skórę twarzy i przez chwilę masuj. Następnie zemulguj produkt niewielką ilością wody. Zmyj wodą.</textarea>
+      </div>
       
       <div class="form-group" style="margin-top: 20px;">
         <label>Nagłówek rezultatów:</label>
@@ -382,7 +395,9 @@
       
       <div class="form-group" style="margin-top: 20px;">
         <label>Pełen skład INCI (HTML):</label>
-        <textarea id="inci-content" class="html-content"><strong>Pełen skład (INCI):</strong> Aqua (Water), Paraffinum Liquidum (Mineral Oil), Glycerin, Cetearyl Isononanoate, Cetyl Alcohol, Tapioca Starch, Glyceryl Stearate, PEG-100 Stearate, Pentylene Glycol, Alpha-Glucan Oligosaccharide, Olea Europaea (Olive) Fruit Oil, Capryloyl Glycine, Argania Spinosa Kernel Oil, Parfum (Fragrance), Simmondsia Chinensis (Jojoba) Seed Oil, Propylene Glycol, Carbomer, Xanthan Gum, 1,2-Hexanediol, Caprylyl Glycol, Sodium Hydroxide, Tocopheryl Acetate, Hexamethylindanopyran, Linalyl Acetate, Calendula Officinalis Flower Extract</textarea>
+        <textarea id="inci-content" class="html-content"><strong>Pełen skład (INCI):</strong> Aqua (Water), Paraffinum Liquidum (Mineral Oil), Glycerin, Cetearyl Isononanoate, Cetyl Alcohol, Tapioca Starch, Glyceryl Stearate, PEG-100 Stearate, Pentylene Glycol, Alpha-Glucan Oligosaccharide, Olea Europaea (Olive) Fruit Oil, Capryloyl Glycine, Argania Spinosa Kernel Oil, Parfum (Fragrance), Simmondsia Chinensis (Jojoba) Seed Oil, Propylene Glycol, Carbomer, Xanthan Gum, 1,2-Hexanediol, Caprylyl Glycol, Sodium Hydroxide, Tocopheryl Acetate, Hexamethylindanopyran, Linalyl Acetate, Calendula Officinalis Flower Extract
+<br><br>
+Skład produktu może ulec zmianie. Zalecamy sprawdzenie aktualnego składu INCI na opakowaniu.</textarea>
       </div>
     </div>
     
@@ -404,7 +419,9 @@
         <!-- Wybrane cechy będą dodawane dynamicznie -->
       </div>
     </div>
-    
+   <p style="text-align: center; color: #8B5CF6;">
+ Designed by KS for <strong><a href="https://www.purles.pl" style="color: #8B5CF6; text-decoration: none;">Purlés</a></strong>
+</p>
     <!-- Akcje -->
     <div class="actions">
       <button type="button" id="generate-preview" class="preview">Podgląd w nowym oknie</button>
@@ -545,6 +562,8 @@
         descriptionRows: [],
         ingredients: [],
         features: getSelectedFeatures(),
+        usageHeadline: document.getElementById('usage-headline').value,
+        usageContent: document.getElementById('usage-content').value,
         resultsHeadline: document.getElementById('results-headline').value,
         resultsContent: document.getElementById('results-content').value,
         compositionHeadline: document.getElementById('composition-headline').value,
@@ -597,6 +616,8 @@
       });
       
       // Przywróć pozostałe pola
+      document.getElementById('usage-headline').value = state.usageHeadline;
+      document.getElementById('usage-content').value = state.usageContent;
       document.getElementById('results-headline').value = state.resultsHeadline;
       document.getElementById('results-content').value = state.resultsContent;
       document.getElementById('composition-headline').value = state.compositionHeadline;
@@ -994,6 +1015,15 @@
         html += '  </div>\n';
       });
       
+      // Sposób użycia
+      const usageHeadline = document.getElementById('usage-headline').value;
+      const usageContent = document.getElementById('usage-content').value;
+      
+      html += '  <div class="desc__results">\n';
+      html += `    <h3 class="desc__headline">${usageHeadline}</h3>\n`;
+      html += `    ${usageContent}\n`;
+      html += '  </div>\n';
+      
       // Rezultaty
       const resultsHeadline = document.getElementById('results-headline').value;
       const resultsContent = document.getElementById('results-content').value;
@@ -1093,6 +1123,7 @@
           margin-bottom: 1rem;
         }
         
+        .desc__usage,
         .desc__results {
           margin-top: 1.5rem;
           padding: 1rem;
@@ -1315,11 +1346,13 @@
         setupTextareaListeners(textarea);
       });
       
-      // Dodaj nasłuchiwacz dla rezultatów
+      // Dodaj nasłuchiwacz dla sposobu użycia i rezultatów
+      setupTextareaListeners(document.getElementById('usage-content'));
       setupTextareaListeners(document.getElementById('results-content'));
       setupTextareaListeners(document.getElementById('inci-content'));
       
       // Dodaj nasłuchiwacze dla inputów
+      setupInputListeners(document.getElementById('usage-headline'));
       setupInputListeners(document.getElementById('results-headline'));
       setupInputListeners(document.getElementById('composition-headline'));
       setupInputListeners(document.getElementById('features-headline'));
