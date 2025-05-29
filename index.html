@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edytor opisów produktów Purles</title>
+  <title>Edytor opisów produktów Purles v2</title>
   <style>
     * {
       box-sizing: border-box;
@@ -333,6 +333,16 @@
       background-color: #f44336;
       border-color: #d32f2f;
     }
+
+    .info-box {
+      background-color: #e3f2fd;
+      border: 1px solid #2196F3;
+      border-radius: 4px;
+      padding: 10px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      color: #1565C0;
+    }
   </style>
 </head>
 <body>
@@ -382,7 +392,7 @@
   
   <div class="container">
   
-    <h1> <img src="https://purles.pl/wp-content/uploads/2022/04/logo.png" alt="Purles Logo" class="logo" height="50px" margin-right="120px">  Edytor opisów produktów Purles</h1>
+    <h1> <img src="https://purles.pl/wp-content/uploads/2022/04/logo.png" alt="Purles Logo" class="logo" height="50px" margin-right="120px">  Edytor opisów produktów Purles v2</h1>
     
     <!-- Sekcja 1: Opis główny -->
     <div class="section" id="description-section">
@@ -432,11 +442,16 @@
         <input type="text" id="composition-headline" value="Składniki aktywne:">
       </div>
       
-      <div id="ingredients-container">
-        <!-- Składniki będą dodawane dynamicznie -->
+      <div class="info-box">
+        ℹ️ Wklej wszystkie składniki aktywne poniżej. Każdy składnik zostanie automatycznie umieszczony w osobnym akapicie &lt;p&gt;.
       </div>
       
-      <button type="button" id="add-ingredient">Dodaj składnik aktywny</button>
+      <div class="form-group">
+        <label>Składniki aktywne (HTML):</label>
+        <textarea id="ingredients-content" class="html-content" style="min-height: 200px;"><strong>Bioecolia -</strong> polisacharyd (α-glukan) otrzymany opatentowaną metodą enzymatycznej syntezy z cukrów naturalnych. Chroni i stymuluje naturalną zdolność obronną skóry poprzez działanie jako bioselektywny substrat (prebiotyk) dla pożytecznych mikroorganizmów, kosztem patogenów. Bioecolia równoważy i stymuluje mikrobiotę skóry, wspomagając pierwszą linię obrony przed atakiem z zewnątrz.
+
+<strong>Oliwa z oliwek&nbsp;–</strong> w większości składa się z kwasu oleinowego, który tworzy na powierzchni skóry delikatną warstwę ochronną, przeciwdziałając utracie wody. W składzie oliwy obecny jest także kwas linolowy, który redukuje stany zapalne oraz normalizuje proces rogowacenia naskórka. W oliwie znajdziemy również polifenole o właściwościach antyoksydacyjnych i przeciwzapalnych. Oliwa z oliwek zmiękcza i świetnie łagodzi podrażnienia wysuszonej skóry.</textarea>
+      </div>
       
       <div class="form-group" style="margin-top: 20px;">
         <label>Pełen skład INCI (HTML):</label>
@@ -550,34 +565,15 @@ Skład produktu może ulec zmianie. Zalecamy sprawdzenie aktualnego składu INCI
             content: "<ul>\n<li>skóra wrażliwa, nadreaktywna, alergiczna,</li>\n<li>skóra ze skłonnością do silnego przesuszenia lub atopii,</li>\n<li>zaburzenia równowagi skóry  wynikające z terapii dermatologicznych, a także inwazyjnych zabiegów kosmetycznych.</li>\n</ul>"
           },
           {
-            imageUrl: "https://shop49275-1.iai-shop.com/data/include/cms/wdrozenie/opisy/image_60.webp?",
+            imageUrl: "https://shop49275-1.iai-shop.com/data/include/cms/wdrozenie/opisy/image_60.webp",
             headline: "Działanie:",
             content: "<ul>\n<li>przywraca równowagę skórnej mikrobioty,</li>\n<li>wzmacnia barierę ochronną skóry,</li>\n<li>intensywnie nawilża,</li>\n<li>odżywia,</li>\n<li>zmiękcza,</li>\n<li>redukuje szorstkość,</li>\n<li>łagodzi podrażnienia.</li>\n</ul>"
           }
         ]
       },
-      composition: {
-        content: [
-          "<strong>Bioecolia -</strong> polisacharyd (α-glukan) otrzymany opatentowaną metodą enzymatycznej syntezy z cukrów naturalnych. Chroni i stymuluje naturalną zdolność obronną skóry poprzez działanie jako bioselektywny substrat (prebiotyk) dla pożytecznych mikroorganizmów, kosztem patogenów. Bioecolia równoważy i stymuluje mikrobiotę skóry, wspomagając pierwszą linię obrony przed atakiem z zewnątrz.",
-          "<strong>Oliwa z oliwek&nbsp;–</strong> w większości składa się z kwasu oleinowego, który tworzy na powierzchni skóry delikatną warstwę ochronną, przeciwdziałając utracie wody. W składzie oliwy obecny jest także kwas linolowy, który redukuje stany zapalne oraz normalizuje proces rogowacenia naskórka. W oliwie znajdziemy również polifenole o właściwościach antyoksydacyjnych i przeciwzapalnych. Oliwa z oliwek zmiękcza i świetnie łagodzi podrażnienia wysuszonej skóry."
-        ]
-      },
       features: {
-        // Przykładowe wybrane funkcje
-        items: [
-          {
-            iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/cruelty_free.png", 
-            text: "Przyjazny zwierzętom"
-          },
-          {
-            iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/natural_ingredients.png", 
-            text: "Dominują składniki naturalnego pochodzenia"
-          },
-          {
-            iconUrl: "https://shop49275-1.yourtechnicaldomain.com/data/include/cms/cechy/paraben_free.png", 
-            text: "Nie zawiera parabenów"
-          }
-        ]
+        // Domyślnie brak wybranych cech
+        items: []
       }
     };
     
@@ -627,7 +623,7 @@ Skład produktu może ulec zmianie. Zalecamy sprawdzenie aktualnego składu INCI
       const state = {
         type: 'document-state',
         descriptionRows: [],
-        ingredients: [],
+        ingredientsContent: document.getElementById('ingredients-content').value,
         features: getSelectedFeatures(),
         usageHeadline: document.getElementById('usage-headline').value,
         usageContent: document.getElementById('usage-content').value,
@@ -647,11 +643,6 @@ Skład produktu może ulec zmianie. Zalecamy sprawdzenie aktualnego składu INCI
         });
       });
       
-      // Zapisz stan składników
-      document.querySelectorAll("#ingredients-container .row").forEach(row => {
-        state.ingredients.push(row.querySelector('.ingredient-content').value);
-      });
-      
       actionHistory.push(state);
       if (actionHistory.length > 50) {
         actionHistory.shift();
@@ -668,13 +659,8 @@ Skład produktu może ulec zmianie. Zalecamy sprawdzenie aktualnego składu INCI
         addDescriptionRow(row.imageUrl, row.headline, row.content);
       });
       
-      // Usuń wszystkie składniki
-      document.getElementById('ingredients-container').innerHTML = '';
-      
       // Przywróć składniki
-      state.ingredients.forEach(content => {
-        addIngredient(content);
-      });
+      document.getElementById('ingredients-content').value = state.ingredientsContent;
       
       // Przywróć cechy
       document.getElementById('features-container').innerHTML = '';
@@ -921,37 +907,21 @@ Skład produktu może ulec zmianie. Zalecamy sprawdzenie aktualnego składu INCI
       }
     }
     
-    // Funkcja do dodawania składnika
-    function addIngredient(content = "", afterElement = null) {
-      // Zapisz stan dokumentu przed dodaniem
-      saveDocumentState();
+    // Funkcja do przetworzenia składników - każdy składnik w osobnym <p>
+    function processIngredients(content) {
+      // Usuń puste linie i znaki białe na początku i końcu
+      const trimmedContent = content.trim();
       
-      const container = document.getElementById("ingredients-container");
-      const ingredientId = "ingredient-" + Date.now();
+      // Podziel na linie
+      const lines = trimmedContent.split(/\n+/);
       
-      const ingredientHtml = `
-        <div class="row" id="${ingredientId}">
-          <div class="form-group">
-            <label>Składnik (HTML):</label>
-            <textarea class="ingredient-content html-content">${content}</textarea>
-          </div>
-          
-          <div class="row-actions">
-            <button type="button" class="delete" onclick="removeElement('${ingredientId}')">Usuń składnik</button>
-            <button type="button" class="add-inline" onclick="addIngredient('', document.getElementById('${ingredientId}'))">Dodaj składnik po tym</button>
-          </div>
-        </div>
-      `;
+      // Przefiltruj puste linie i przygotuj HTML
+      const processedLines = lines
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .map(line => `  <p>${line}</p>`);
       
-      if (afterElement) {
-        afterElement.insertAdjacentHTML('afterend', ingredientHtml);
-      } else {
-        container.insertAdjacentHTML('beforeend', ingredientHtml);
-      }
-      
-      // Dodaj listener dla tekstu
-      const newRow = document.getElementById(ingredientId);
-      setupTextareaListeners(newRow.querySelector('.html-content'));
+      return processedLines.join('\n');
     }
     
     // Funkcja do dodawania wybranej cechy produktu do listy
@@ -1152,12 +1122,10 @@ Skład produktu może ulec zmianie. Zalecamy sprawdzenie aktualnego składu INCI
       const compositionHeadline = document.getElementById('composition-headline').value;
       html += `  <h3 class="desc__headline">${compositionHeadline}</h3>\n`;
       
-      // Składniki
-      const ingredients = document.querySelectorAll("#ingredients-container .row");
-      ingredients.forEach(ingredient => {
-        const content = ingredient.querySelector('.ingredient-content').value;
-        html += `  <p>${content}</p>\n`;
-      });
+      // Składniki - teraz przetwarzamy zawartość pola tekstowego
+      const ingredientsContent = document.getElementById('ingredients-content').value;
+      const processedIngredients = processIngredients(ingredientsContent);
+      html += processedIngredients + '\n';
       
       // INCI
       const inciContent = document.getElementById('inci-content').value;
@@ -1422,17 +1390,11 @@ Skład produktu może ulec zmianie. Zalecamy sprawdzenie aktualnego składu INCI
         addDescriptionRow(row.imageUrl, row.headline, row.content);
       });
       
-      initialData.composition.content.forEach(content => {
-        addIngredient(content);
-      });
+      // Nie dodajemy żadnych cech domyślnie - użytkownik wybierze sam
       
       // Obsługa przycisków
       document.getElementById('add-description-row').addEventListener('click', function() {
         addDescriptionRow();
-      });
-      
-      document.getElementById('add-ingredient').addEventListener('click', function() {
-        addIngredient('<strong>Składnik</strong> - tutaj wpisz opis składnika');
       });
       
       // Przyciski w toolbarze
@@ -1460,6 +1422,7 @@ Skład produktu może ulec zmianie. Zalecamy sprawdzenie aktualnego składu INCI
       setupTextareaListeners(document.getElementById('usage-content'));
       setupTextareaListeners(document.getElementById('results-content'));
       setupTextareaListeners(document.getElementById('inci-content'));
+      setupTextareaListeners(document.getElementById('ingredients-content'));
       
       // Dodaj nasłuchiwacze dla inputów
       setupInputListeners(document.getElementById('usage-headline'));
