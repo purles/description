@@ -202,6 +202,23 @@
       font-size: 14px;
     }
     
+    .toolbar .product-name-input {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .toolbar .product-name-input label {
+      color: white;
+      margin: 0;
+    }
+    
+    .toolbar .product-name-input input {
+      width: 200px;
+      padding: 8px;
+      font-size: 14px;
+    }
+    
     .img-preview {
       max-width: 150px;
       max-height: 150px;
@@ -295,7 +312,27 @@
       font-size: 14px;
     }
 
-    /* Usunięto style mobilne */
+    /* Style dla przycisków toggle */
+    .toggle-button {
+      background-color: #666;
+      color: white;
+      border: 2px solid transparent;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-left: 10px;
+    }
+    
+    .toggle-button.active {
+      background-color: #4CAF50;
+      border-color: #45a049;
+    }
+    
+    .toggle-button.inactive {
+      background-color: #f44336;
+      border-color: #d32f2f;
+    }
   </style>
 </head>
 <body>
@@ -304,6 +341,10 @@
     <div class="sku-input">
       <label for="sku-number">SKU:</label>
       <input type="text" id="sku-number" placeholder="np. 165" onchange="updateImageNames()">
+    </div>
+    <div class="product-name-input">
+      <label for="product-name">Nazwa produktu:</label>
+      <input type="text" id="product-name" placeholder="np. Krem nawilżający" onchange="updateImageNames()">
     </div>
     <div class="divider"></div>
     <button type="button" onclick="formatText('bold')" title="Pogrubienie">B</button>
@@ -354,7 +395,9 @@
       <button type="button" id="add-description-row">Dodaj nową sekcję opisu</button>
       
       <div class="form-group" style="margin-top: 20px;">
-        <label>Nagłówek sposobu użycia:</label>
+        <label>Nagłówek sposobu użycia:
+          <button type="button" class="toggle-button active" id="toggle-usage" onclick="toggleSection('usage')">Pokaż</button>
+        </label>
         <input type="text" id="usage-headline" value="Sposób użycia:">
       </div>
       
@@ -364,7 +407,9 @@
       </div>
       
       <div class="form-group" style="margin-top: 20px;">
-        <label>Nagłówek rezultatów:</label>
+        <label>Nagłówek rezultatów:
+          <button type="button" class="toggle-button active" id="toggle-results" onclick="toggleSection('results')">Pokaż</button>
+        </label>
         <input type="text" id="results-headline" value="Rezultaty:">
       </div>
       
@@ -541,6 +586,28 @@ Skład produktu może ulec zmianie. Zalecamy sprawdzenie aktualnego składu INCI
     
     // Historia akcji dla cofania
     let actionHistory = [];
+    
+    // Stan widoczności sekcji
+    let sectionVisibility = {
+      usage: true,
+      results: true
+    };
+    
+    // Funkcja do przełączania widoczności sekcji
+    function toggleSection(section) {
+      sectionVisibility[section] = !sectionVisibility[section];
+      const button = document.getElementById(`toggle-${section}`);
+      
+      if (sectionVisibility[section]) {
+        button.textContent = 'Pokaż';
+        button.classList.remove('inactive');
+        button.classList.add('active');
+      } else {
+        button.textContent = 'Ukryj';
+        button.classList.remove('active');
+        button.classList.add('inactive');
+      }
+    }
     
     // Funkcja do zapisywania akcji w historii
     function saveAction(element, oldValue) {
@@ -759,6 +826,7 @@ Skład produktu może ulec zmianie. Zalecamy sprawdzenie aktualnego składu INCI
     // Funkcja do aktualizacji nazw obrazków na podstawie SKU
     function updateImageNames() {
       const sku = document.getElementById('sku-number').value.trim();
+      const productName = document.getElementById('product-name').value.trim();
       
       if (!sku) return;
       
@@ -773,11 +841,27 @@ Skład produktu może ulec zmianie. Zalecamy sprawdzenie aktualnego składu INCI
         
         // Sprawdź czy to jest placeholder image_XX.webp
         if (filename.match(/image_\d+\.webp/)) {
-          urlParts[urlParts.length - 1] = `${sku}_${index + 1}.png`;
+          urlParts[urlParts.length - 1] = `${sku}_${index + 1}.jpg`;
           imageInput.value = urlParts.join('/');
           updateImagePreview(imageInput);
         }
       });
+    }
+    
+    // Funkcja do generowania tekstu ALT
+    function generateAltText() {
+      const sku = document.getElementById('sku-number').value.trim();
+      const productName = document.getElementById('product-name').value.trim();
+      
+      let altText = "Purlés";
+      if (sku) {
+        altText += ` ${sku}`;
+      }
+      if (productName) {
+        altText += ` ${productName}`;
+      }
+      
+      return altText.trim();
     }
     
     // Funkcja do dodawania wiersza opisu
@@ -999,6 +1083,8 @@ Skład produktu może ulec zmianie. Zalecamy sprawdzenie aktualnego składu INCI
       
       // Wiersze opisu
       const descRows = document.querySelectorAll("#description-rows .row");
+      const altText = generateAltText();
+      
       descRows.forEach(row => {
         const imageUrl = row.querySelector('.desc-image').value;
         const headline = row.querySelector('.desc-headline').value;
@@ -1006,7 +1092,7 @@ Skład produktu może ulec zmianie. Zalecamy sprawdzenie aktualnego składu INCI
         
         html += '  <div class="desc__row">\n';
         html += '    <div class="desc__image">\n';
-        html += `      <img src="${imageUrl}" alt="" loading="lazy">\n`;
+        html += `      <img src="${imageUrl}" alt="${altText}" loading="lazy">\n`;
         html += '    </div>\n';
         html += '    <div class="desc__content">\n';
         html += `      <h3 class="desc__headline">${headline}</h3>\n`;
@@ -1016,22 +1102,46 @@ Skład produktu może ulec zmianie. Zalecamy sprawdzenie aktualnego składu INCI
       });
       
       // Sposób użycia
-      const usageHeadline = document.getElementById('usage-headline').value;
-      const usageContent = document.getElementById('usage-content').value;
-      
-      html += '  <div class="desc__results">\n';
-      html += `    <h3 class="desc__headline">${usageHeadline}</h3>\n`;
-      html += `    ${usageContent}\n`;
-      html += '  </div>\n';
+      if (sectionVisibility.usage) {
+        const usageHeadline = document.getElementById('usage-headline').value;
+        const usageContent = document.getElementById('usage-content').value;
+        
+        html += '  <div class="desc__results">\n';
+        html += `    <h3 class="desc__headline">${usageHeadline}</h3>\n`;
+        html += `    ${usageContent}\n`;
+        html += '  </div>\n';
+      } else {
+        const usageHeadline = document.getElementById('usage-headline').value;
+        const usageContent = document.getElementById('usage-content').value;
+        
+        html += '  <!-- Sekcja sposób użycia ukryta\n';
+        html += '  <div class="desc__results">\n';
+        html += `    <h3 class="desc__headline">${usageHeadline}</h3>\n`;
+        html += `    ${usageContent}\n`;
+        html += '  </div>\n';
+        html += '  -->\n';
+      }
       
       // Rezultaty
-      const resultsHeadline = document.getElementById('results-headline').value;
-      const resultsContent = document.getElementById('results-content').value;
-      
-      html += '  <div class="desc__results">\n';
-      html += `    <h3 class="desc__headline">${resultsHeadline}</h3>\n`;
-      html += `    ${resultsContent}\n`;
-      html += '  </div>\n';
+      if (sectionVisibility.results) {
+        const resultsHeadline = document.getElementById('results-headline').value;
+        const resultsContent = document.getElementById('results-content').value;
+        
+        html += '  <div class="desc__results">\n';
+        html += `    <h3 class="desc__headline">${resultsHeadline}</h3>\n`;
+        html += `    ${resultsContent}\n`;
+        html += '  </div>\n';
+      } else {
+        const resultsHeadline = document.getElementById('results-headline').value;
+        const resultsContent = document.getElementById('results-content').value;
+        
+        html += '  <!-- Sekcja rezultaty ukryta\n';
+        html += '  <div class="desc__results">\n';
+        html += `    <h3 class="desc__headline">${resultsHeadline}</h3>\n`;
+        html += `    ${resultsContent}\n`;
+        html += '  </div>\n';
+        html += '  -->\n';
+      }
       html += '</div>\n\n';
       
       // 2. Skład
@@ -1356,6 +1466,7 @@ Skład produktu może ulec zmianie. Zalecamy sprawdzenie aktualnego składu INCI
       setupInputListeners(document.getElementById('results-headline'));
       setupInputListeners(document.getElementById('composition-headline'));
       setupInputListeners(document.getElementById('features-headline'));
+      setupInputListeners(document.getElementById('product-name'));
       
       // Zamykanie popupu po kliknięciu w overlay
       document.getElementById('overlay').addEventListener('click', closePopup);
